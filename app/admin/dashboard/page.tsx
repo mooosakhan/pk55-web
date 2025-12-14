@@ -21,7 +21,6 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -51,22 +50,6 @@ export default function AdminDashboard() {
 
     try {
       const token = window.localStorage.getItem('token');
-      
-      // Upload image if selected
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append('image', imageFile);
-
-        const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/banner/upload`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) throw new Error('Image upload failed');
-        const uploadData = await uploadResponse.json() as { imageUrl: string };
-        banner.imageUrl = uploadData.imageUrl;
-      }
 
       // Update banner data
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/banner`, {
@@ -81,7 +64,6 @@ export default function AdminDashboard() {
       if (!response.ok) throw new Error('Update failed');
 
       setMessage('Banner updated successfully!');
-      setImageFile(null);
     } catch (error: any) {
       setMessage('Error: ' + error.message);
     } finally {
@@ -168,21 +150,6 @@ export default function AdminDashboard() {
               />
             </div>
 
-            <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Background Image
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImageFile(e.currentTarget.files?.[0] || null)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
-              />
-              {banner.imageUrl && (
-                <p className="text-sm text-gray-600 mt-2">Current: {banner.imageUrl}</p>
-              )}
-            </div>
-
             <button
               type="submit"
               disabled={loading}
@@ -191,28 +158,6 @@ export default function AdminDashboard() {
               {loading ? 'Updating...' : 'Update Banner'}
             </button>
           </form>
-        </div>
-
-        {/* Preview */}
-        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-4">Preview</h2>
-          <div className="relative h-96 overflow-hidden rounded-lg">
-            <img
-              src={banner.imageUrl || '/assets/bg.webp'}
-              alt="Preview"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <div className="text-center text-white space-y-4">
-                <h1 className="text-5xl font-bold">{banner.heading}</h1>
-                <div className="text-7xl font-extrabold text-yellow-400">
-                  {banner.discountPercentage}% OFF
-                </div>
-                <p className="text-xl">{banner.date}</p>
-                <p className="text-lg max-w-2xl">{banner.description}</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

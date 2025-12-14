@@ -16,7 +16,7 @@ export default function HeroSection() {
     date: new Date().toLocaleDateString('en-US'),
     heading: 'Special Offer',
     description: "Don't miss out on this amazing deal! Limited time offer on all products.",
-    imageUrl: '/assets/bg.webp',
+    imageUrl: '/assets/bg.jpg',
   });
   const [loading, setLoading] = useState(true);
 

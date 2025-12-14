@@ -13,7 +13,7 @@ interface BannerData {
 
 export default function AdminDashboard() {
   const [banner, setBanner] = useState<BannerData>({
-    discountPercentage: 25,
+    discountPercentage: 50,
     date: '',
     heading: '',
     description: '',

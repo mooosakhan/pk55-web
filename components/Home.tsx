@@ -11,8 +11,19 @@ interface BannerData {
 }
 
 export default function HeroSection() {
+  const getDefaultDiscount = () => {
+    // Get current time in Pakistani timezone (PKT is UTC+5)
+    const now = new Date();
+    const pakistaniTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+    const hour = pakistaniTime.getHours();
+    
+    // Night time (12 AM to 12 PM / 0-11): 70% discount
+    // Day time (12 PM to 12 AM / 12-23): 50% discount
+    return hour < 12 ? 70 : 50;
+  };
+
   const [banner, setBanner] = useState<BannerData>({
-    discountPercentage: 25, 
+    discountPercentage: getDefaultDiscount(), 
     date: new Date().toLocaleDateString('en-US'),
     heading: 'Special Offer',
     description: "Don't miss out on this amazing deal! Limited time offer on all products.",
@@ -29,6 +40,8 @@ export default function HeroSection() {
       })
       .catch(err => {
         console.error('Failed to fetch banner data:', err);
+        // Use default discount based on Pakistani time if API fails
+        setBanner(prev => ({ ...prev, discountPercentage: getDefaultDiscount() }));
         setLoading(false);
       });
   }, []);

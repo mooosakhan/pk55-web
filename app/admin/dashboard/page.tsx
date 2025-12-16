@@ -10,6 +10,11 @@ interface ImageData {
   createdAt: string;
 }
 
+interface Settings {
+  headerText: string;
+  subheaderText: string;
+}
+
 export default function AdminDashboard() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -22,6 +27,9 @@ export default function AdminDashboard() {
   const [replaceFile, setReplaceFile] = useState<File | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [headerText, setHeaderText] = useState('');
+  const [subheaderText, setSubheaderText] = useState('');
+  const [settingsLoading, setSettingsLoading] = useState(false);
   const router = useRouter();
 
   // Check authentication on mount
@@ -61,6 +69,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchImages();
+      fetchSettings();
     }
   }, [isAuthenticated]);
 
@@ -73,6 +82,43 @@ export default function AdminDashboard() {
       console.error('Failed to fetch images:', error);
     } finally {
       setLoadingImages(false);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/settings`);
+      const data: Settings = await response.json();
+      setHeaderText(data.headerText || '');
+      setSubheaderText(data.subheaderText || '');
+    } catch (error) {
+      console.error('Failed to fetch settings:', error);
+    }
+  };
+
+  const handleUpdateSettings = async (e: FormEvent) => {
+    e.preventDefault();
+    setSettingsLoading(true);
+    setMessage('');
+
+    try {
+      const token = window.localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ headerText, subheaderText })
+      });
+
+      if (!response.ok) throw new Error('Settings update failed');
+
+      setMessage('Settings updated successfully!');
+    } catch (error: any) {
+      setMessage('Error: ' + error.message);
+    } finally {
+      setSettingsLoading(false);
     }
   };
 
@@ -246,6 +292,52 @@ export default function AdminDashboard() {
             {message}
           </div>
         )}
+
+        {/* Settings Section */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-200 mb-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-blue-700">Website Settings</h2>
+            <p className="text-gray-600 mt-1">Update the main header and subheader text</p>
+          </div>
+
+          <form onSubmit={handleUpdateSettings} className="space-y-6">
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Header Text
+              </label>
+              <input
+                type="text"
+                value={headerText}
+                onChange={(e) => setHeaderText(e.target.value)}
+                className="shadow-lg appearance-none border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="DAILY PK 55 REPORT AND ALL KHABAR"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Subheader Text
+              </label>
+              <input
+                type="text"
+                value={subheaderText}
+                onChange={(e) => setSubheaderText(e.target.value)}
+                className="shadow-lg appearance-none border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Stay Updated with the Latest News"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={settingsLoading}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg disabled:opacity-50 transition-all shadow-lg"
+            >
+              {settingsLoading ? 'Updating...' : 'Update Settings'}
+            </button>
+          </form>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Upload Form */}

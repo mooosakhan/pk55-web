@@ -9,15 +9,33 @@ interface ImageData {
   createdAt: string;
 }
 
+interface Settings {
+  headerText: string;
+  subheaderText: string;
+}
+
 export default function VerticalSlider() {
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [settings, setSettings] = useState<Settings>({
+    headerText: 'DAILY PK 55 REPORT AND ALL KHABAR',
+    subheaderText: 'Stay Updated with the Latest News'
+  });
   const sliderRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number>(0);
   const touchEndY = useRef<number>(0);
 
   useEffect(() => {
+    // Fetch settings
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/settings`)
+      .then(res => res.json())
+      .then((data: Settings) => {
+        setSettings(data);
+      })
+      .catch(err => console.error('Failed to fetch settings:', err));
+
+    // Fetch images
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images`)
       .then(res => res.json())
       .then((data: ImageData[]) => {
@@ -97,22 +115,22 @@ export default function VerticalSlider() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 py-12">
+    <div className="md:min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 py-12">
       <div className="max-w-5xl mx-auto px-4">
         {/* Header Text */}
         <div className="text-center mb-12 animate-fade-in">
           <h1 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800 mb-3">
-            DAILY PK 55 REPORT AND ALL KHABAR
+            {settings.headerText}
           </h1>
           <div className="w-32 h-1.5 bg-gradient-to-r from-blue-600 to-blue-800 mx-auto rounded-full"></div>
-          <p className="text-gray-600 mt-4 text-lg">Stay Updated with the Latest News</p>
+          <p className="text-gray-600 mt-4 text-lg">{settings.subheaderText}</p>
         </div>
 
         {/* Slider Container */}
-        <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
+        <div className="relative bg-white rounded-2xl overflow-hidden   border-gray-200">
           <div
             ref={sliderRef}
-            className="relative h-[450px] md:h-[550px] overflow-hidden"
+            className="relative h-[450px] md:h-[550px]"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -163,7 +181,7 @@ export default function VerticalSlider() {
             <button
               onClick={prevSlide}
               disabled={currentIndex === 0}
-              className="md:hidden absolute top-2 left-1/2 transform -translate-x-1/2 bg-blue-600/90 hover:bg-blue-700 text-white p-3 rounded-full transition-all z-10 disabled:opacity-20 disabled:cursor-not-allowed shadow-lg"
+              className="md:hidden absolute top-[-10px] left-1/2 transform -translate-x-1/2 text-black p-3 rounded-full transition-all z-10 disabled:opacity-20 disabled:cursor-not-allowed disabled:hidden" 
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
@@ -173,7 +191,7 @@ export default function VerticalSlider() {
             <button
               onClick={nextSlide}
               disabled={currentIndex === images.length - 1}
-              className="md:hidden absolute bottom-1 left-1/2 transform -translate-x-1/2 bg-blue-600/90 hover:bg-blue-700 text-white p-3 rounded-full transition-all z-10 disabled:opacity-20 disabled:cursor-not-allowed shadow-lg"
+              className="md:hidden absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 text-black p-3 rounded-full transition-all z-10 disabled:opacity-20 disabled:cursor-not-allowed shadow-lg"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />

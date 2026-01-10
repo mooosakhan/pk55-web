@@ -68,6 +68,8 @@ export default function VerticalSlider() {
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Prevent the default scroll behavior when touching the slider
+    e.preventDefault();
     touchEndY.current = e.targetTouches[0].clientY;
   };
 
@@ -130,7 +132,7 @@ export default function VerticalSlider() {
         <div className="relative bg-white rounded-2xl overflow-hidden   border-gray-200">
           <div
             ref={sliderRef}
-            className="relative h-[450px] md:h-[550px]"
+            className="relative h-[450px] md:h-[550px] touch-none"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}

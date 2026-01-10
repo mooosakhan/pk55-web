@@ -31,7 +31,7 @@ export default function Footer() {
             <div className="flex space-x-4">
               {/* Facebook */}
               <a
-                href="https://facebook.com/pk55report"
+                href="https://www.facebook.com/groups/3121531198028032/?ref=share&mibextid=NSMWBT"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-100 hover:bg-blue-600 hover:text-white text-gray-700 p-3 rounded-full transition-colors"

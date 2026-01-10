@@ -9,7 +9,7 @@ export default function Footer() {
           <div>
             <h3 className="text-2xl font-bold mb-4 text-blue-600">DAILY PK 55</h3>
             <p className="text-gray-700">
-              Your daily source for the latest news and updates from Pakistan.
+              Your daily source for the latest news and updates from Thailand.
             </p>
           </div>
 

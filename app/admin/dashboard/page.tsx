@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { compressImage, formatFileSize } from '@/utils/imageCompression';
 
 interface ImageData {
   id: string;
@@ -30,6 +31,7 @@ export default function AdminDashboard() {
   const [headerText, setHeaderText] = useState('');
   const [subheaderText, setSubheaderText] = useState('');
   const [settingsLoading, setSettingsLoading] = useState(false);
+  const [compressionInfo, setCompressionInfo] = useState('');
   const router = useRouter();
 
   // Check authentication on mount
@@ -177,9 +179,19 @@ export default function AdminDashboard() {
     if (!editingImage || !replaceFile) return;
 
     try {
+      setLoading(true);
       const token = window.localStorage.getItem('token');
+      
+      // Compress image if needed
+      const originalSize = replaceFile.size;
+      const processedFile = await compressImage(replaceFile);
+      
+      if (processedFile.size < originalSize) {
+        setMessage(`Image compressed from ${formatFileSize(originalSize)} to ${formatFileSize(processedFile.size)}`);
+      }
+
       const formData = new FormData();
-      formData.append('image', replaceFile);
+      formData.append('image', processedFile);
       formData.append('date', editDate);
 
       const encodedId = encodeURIComponent(editingImage.id);
@@ -194,9 +206,12 @@ export default function AdminDashboard() {
       setMessage('Image replaced successfully!');
       setEditingImage(null);
       setReplaceFile(null);
+      setCompressionInfo('');
       fetchImages();
     } catch (error: any) {
       setMessage('Error: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -209,11 +224,21 @@ export default function AdminDashboard() {
 
     setLoading(true);
     setMessage('');
+    setCompressionInfo('');
 
     try {
       const token = window.localStorage.getItem('token');
+      
+      // Compress image if size > 1000KB
+      const originalSize = imageFile.size;
+      const processedFile = await compressImage(imageFile);
+      
+      if (processedFile.size < originalSize) {
+        setCompressionInfo(`Image compressed from ${formatFileSize(originalSize)} to ${formatFileSize(processedFile.size)}`);
+      }
+
       const formData = new FormData();
-      formData.append('image', imageFile);
+      formData.append('image', processedFile);
       formData.append('date', date);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/upload`, {
@@ -224,8 +249,9 @@ export default function AdminDashboard() {
 
       if (!response.ok) throw new Error('Upload failed');
 
-      setMessage('Image uploaded successfully!');
+      setMessage('Image uploaded successfully!' + (compressionInfo ? ' ' + compressionInfo : ''));
       setImageFile(null);
+      setCompressionInfo('');
       fetchImages(); // Refresh the list
       
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -368,10 +394,28 @@ export default function AdminDashboard() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setImageFile(file);
+                  if (file) {
+                    const sizeKB = file.size / 1024;
+                    if (sizeKB > 1000) {
+                      setCompressionInfo(`File size: ${formatFileSize(file.size)} - Will be compressed before upload`);
+                    } else {
+                      setCompressionInfo(`File size: ${formatFileSize(file.size)} - No compression needed`);
+                    }
+                  } else {
+                    setCompressionInfo('');
+                  }
+                }}
                 className="shadow-lg appearance-none border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
+              {compressionInfo && (
+                <p className={`mt-2 text-sm ${imageFile && imageFile.size > 1000 * 1024 ? 'text-orange-600 font-semibold' : 'text-green-600'}`}>
+                  {compressionInfo}
+                </p>
+              )}
               {imageFile && (
                 <div className="mt-4 border-2 border-blue-600 rounded-lg overflow-hidden">
                   <img 
@@ -499,9 +543,27 @@ export default function AdminDashboard() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setReplaceFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setReplaceFile(file);
+                    if (file) {
+                      const sizeKB = file.size / 1024;
+                      if (sizeKB > 1000) {
+                        setCompressionInfo(`File size: ${formatFileSize(file.size)} - Will be compressed before upload`);
+                      } else {
+                        setCompressionInfo(`File size: ${formatFileSize(file.size)} - No compression needed`);
+                      }
+                    } else {
+                      setCompressionInfo('');
+                    }
+                  }}
                   className="shadow-lg appearance-none border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {compressionInfo && (
+                  <p className={`mt-2 text-sm ${replaceFile && replaceFile.size > 1000 * 1024 ? 'text-orange-600 font-semibold' : 'text-green-600'}`}>
+                    {compressionInfo}
+                  </p>
+                )}
                 {replaceFile && (
                   <div className="mt-4">
                     <p className="text-sm text-gray-600 mb-3 font-semibold">New Image Preview:</p>
